@@ -1,9 +1,8 @@
 const jwt = require('jsonwebtoken');
 
-// Middleware to check user role
+
 function authMiddleware(allowedRoles) {
     return function(req, res, next) {
-        // Extract JWT token from cookie or Authorization header
         let token;
         if (req.cookies.token) {
             token = req.cookies.token;
@@ -20,23 +19,18 @@ function authMiddleware(allowedRoles) {
         }
 
             try {
-                // Verify and decode JWT token
                 jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
                   if (err) {
                     console.error('Error verifying token:', err);
                     return res.status(401).json({ error: 'Invalid token' });
                   }
           
-                  console.log('Decoded token payload:', decoded);
                   const userID = decoded.userID;
-                  const userRole = decoded.role; // or fetch from database
-          
-                  // Check if user role is allowed
+                  const userRole = decoded.role;
                   if (!allowedRoles.includes(userRole)) {
                     return res.status(403).json({ error: 'Forbidden' });
                   }
           
-                  // Attach user role to request object for further processing
                   req.userID= userID
                   req.userRole = userRole;
                   req.Token = token
@@ -49,5 +43,4 @@ function authMiddleware(allowedRoles) {
     };
 }
 
-// Export the middleware function
 module.exports = authMiddleware;
