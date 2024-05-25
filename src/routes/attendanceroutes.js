@@ -28,7 +28,7 @@ router.post('/takeAttendance', authMiddleware(['Admin','Teacher']), async (req, 
        
         const token = req.headers.authorization;
 
-        const qrCodeServiceResponse = await axios.post('http://localhost:5004/generateQRCode', requestData, {
+        const qrCodeServiceResponse = await axios.post('https://logging-services.onrender.com/generateQRCode', requestData, {
             headers: {
                 Authorization: token
             }
@@ -37,7 +37,7 @@ router.post('/takeAttendance', authMiddleware(['Admin','Teacher']), async (req, 
         if (qrCodeServiceResponse.status !== 200) {
             throw new Error('Failed to generate QR code');
         }
-        await axios.post('http://localhost:5003/log', { level: 'info', message: `User ${userID} created Qrcode for section${section} ` });
+        await axios.post('https://logging-services.onrender.com/log', { level: 'info', message: `User ${userID} created Qrcode for section${section} ` });
         const qrCodeImageData = qrCodeServiceResponse.data.qrCodeImage;
         res.send({ qrCodeImage: qrCodeImageData });
     } catch (error) {
@@ -220,7 +220,7 @@ router.post('/markattendance', authMiddleware(['Student']), async (req, res) => 
         await session.commitTransaction();
         session.endSession();
 
-        await axios.post('http://localhost:5003/log', { level: 'info', message: `Student ${userID} marked his attendance for Subject ${subjectCode}` });
+        await axios.post('https://logging-services.onrender.com/log', { level: 'info', message: `Student ${userID} marked his attendance for Subject ${subjectCode}` });
         res.status(200).json({ message: 'Attendance marked successfully' });
     } catch (error) {
         await session.abortTransaction();
@@ -374,7 +374,7 @@ router.post('/markattendance1', authMiddleware(['Teacher', 'Admin']), async (req
         await session.commitTransaction();
         session.endSession();
 
-        await axios.post('http://localhost:5003/log', { level: 'info', message: `Teacher ${userID} marked the attendances for Subject ${subjectCode} of students ${studentIDs}` });
+        await axios.post('https://logging-services.onrender.com/log', { level: 'info', message: `Teacher ${userID} marked the attendances for Subject ${subjectCode} of students ${studentIDs}` });
         res.status(200).json({ message: 'Attendance marked successfully' });
     } catch (error) {
         await session.abortTransaction();
