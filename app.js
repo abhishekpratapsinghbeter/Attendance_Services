@@ -7,7 +7,12 @@ const cors = require('cors');
 
 dotenv.config({path:'./config.env'})
 require("./src/models/connection/conn")
-app.use(cors());
+const corsOptions = {
+    origin: 'http://localhost:3000', // Allow requests from this origin
+    methods: ['GET', 'POST','DELETE','PUT'], // Allow only GET and POST requests
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+  };
+  app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.json({ limit: '50mb' }));
