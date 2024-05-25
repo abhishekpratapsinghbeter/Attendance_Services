@@ -63,26 +63,35 @@ router.post('/takeAttendance', authMiddleware(['Admin','Teacher']), async (req, 
 
 router.post('/markattendance', authMiddleware(['Student']), async (req, res) => {
     const { section, batch, course, branch, userID, subjectCode, studentID } = req.body;
+    const session = await mongoose.startSession();
 
     try {
+        session.startTransaction();
+
         const classDetails = await Class.findOne({
             class_section: section,
             class_batch: batch,
             class_branch: branch,
             class_course: course
-        });
+        }).session(session);
 
         if (!classDetails) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: 'Class details not found' });
         }
 
-        const subject = await Subject.findOne({ subject_code: subjectCode });
+        const subject = await Subject.findOne({ subject_code: subjectCode }).session(session);
         if (!subject) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: 'Subject details not found' });
         }
 
-        const teacher = await Teacher.findOne({ teacher_id: userID });
+        const teacher = await Teacher.findOne({ teacher_id: userID }).session(session);
         if (!teacher) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: 'Teacher details not found' });
         }
 
@@ -91,7 +100,7 @@ router.post('/markattendance', authMiddleware(['Student']), async (req, res) => 
             course: course,
             branch: branch,
             'classes.class_id': classDetails._id
-        });
+        }).session(session);
 
         if (!attendance) {
             const students = await Student.find({
@@ -99,7 +108,7 @@ router.post('/markattendance', authMiddleware(['Student']), async (req, res) => 
                 student_batch: batch,
                 student_branch: branch,
                 student_course: course
-            });
+            }).session(session);
 
             const studentRecords = students.map(student => ({
                 student_id: student._id,
@@ -145,13 +154,17 @@ router.post('/markattendance', authMiddleware(['Student']), async (req, res) => 
             }
         }
 
-        const student = await Student.findOne({ student_cllgid: studentID });
+        const student = await Student.findOne({ student_cllgid: studentID }).session(session);
         if (!student) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: `Student with ID ${studentID} not found` });
         }
 
         const classIndex = attendance.classes.findIndex(cls => cls.class_id.equals(classDetails._id));
         if (classIndex === -1) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: 'Class details not found in attendance document' });
         }
 
@@ -162,7 +175,7 @@ router.post('/markattendance', authMiddleware(['Student']), async (req, res) => 
                 student_batch: batch,
                 student_branch: branch,
                 student_course: course
-            });
+            }).session(session);
 
             const studentRecords = students.map(student => ({
                 student_id: student._id,
@@ -238,16 +251,22 @@ router.post('/markattendance1', authMiddleware(['Teacher', 'Admin']), async (req
         });
 
         if (!classDetails) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: 'Class details not found' });
         }
 
         const subject = await Subject.findOne({ subject_code: subjectCode });
         if (!subject) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: 'Subject details not found' });
         }
 
         const teacher = await Teacher.findOne({ teacher_id: userID });
         if (!teacher) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ error: 'Teacher details not found' });
         }
 
