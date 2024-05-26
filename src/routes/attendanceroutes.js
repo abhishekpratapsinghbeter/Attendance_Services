@@ -625,62 +625,62 @@ router.get('/api/attendance/class/:classId', authMiddleware(['Admin','Teacher'])
 
 router.get('/api/attendance/student/:studentId/subject/:subjectCode', authMiddleware(['Admin','Teacher','Student']), async (req, res) => {
     const { studentId, subjectCode } = req.params;
-  
+
     try {
-      const student = await Student.findOne({ student_cllgid: studentId });
-  
-      if (!student) {
-        return res.status(404).send({ message: `Student with ID ${studentId} not found` });
-      }
-  
-      const attendance = await Attendance.aggregate([
-        {
-          $unwind: '$classes' 
-        },
-        {
-          $unwind: '$classes.subjects'
-        },
-        {
-          $match: { // Match documents where:
-            'classes.subjects.subject_id': new mongoose.Types.ObjectId(subjectCode), 
-            'classes.subjects.students.student_id': student._id 
-          }
-        },
-        {
-          $lookup: { 
-            from: 'subjects',
-            localField: 'classes.subjects.subject_id',
-            foreignField: '_id',
-            as: 'subject'
-          }
-        },
-        {
-          $project: { 
-            _id: 0, 
-            subjectName: { $arrayElemAt: ['$subject.subject_name', 0] }, 
-            attendance: { 
-              $filter: {
-                input: '$classes.subjects.students',
-                as: 'studentData',
-                cond: { $eq: ['$$studentData.student_id', student._id] }
-              }
-            }
-          }
+        const student = await Student.findOne({ student_cllgid: studentId });
+
+        if (!student) {
+            return res.status(404).send({ message: `Student with ID ${studentId} not found` });
         }
-      ]);
-  
-  
-      if (!attendance || attendance.length === 0) {
-        return res.status(404).send({ message: `Attendance records for student ${studentId} and subject ${subjectCode} not found` });
-      }
-  
-      res.send(attendance);
+
+        const attendance = await Attendance.aggregate([
+            {
+                $unwind: '$classes'
+            },
+            {
+                $unwind: '$classes.subjects'
+            },
+            {
+                $match: {
+                    'classes.subjects.subject_code': subjectCode,
+                    'classes.subjects.students.student_id': student._id
+                }
+            },
+            {
+                $lookup: {
+                    from: 'subjects',
+                    localField: 'classes.subjects.subject_id',
+                    foreignField: '_id',
+                    as: 'subject'
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    subjectName: { $arrayElemAt: ['$subject.subject_name', 0] },
+                    attendance: {
+                        $filter: {
+                            input: '$classes.subjects.students.attendance',
+                            as: 'attendanceData',
+                            cond: { $eq: ['$$attendanceData.student_id', student._id] }
+                        }
+                    }
+                }
+            }
+        ]);
+
+
+        if (!attendance || attendance.length === 0) {
+            return res.status(404).send({ message: `Attendance records for student ${studentId} and subject ${subjectCode} not found` });
+        }
+
+        res.send(attendance);
     } catch (err) {
-      console.error('Error fetching attendance:', err);
-      res.status(500).send({ message: 'Internal server error' });
+        console.error('Error fetching attendance:', err);
+        res.status(500).send({ message: 'Internal server error' });
     }
-  });
-  
+});
+
 
 
 
