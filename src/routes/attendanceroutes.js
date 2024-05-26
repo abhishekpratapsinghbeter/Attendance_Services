@@ -28,7 +28,7 @@ router.post('/takeAttendance', authMiddleware(['Admin','Teacher']), async (req, 
        
         const token = req.headers.authorization;
 
-        const qrCodeServiceResponse = await axios.post('https://logging-services.onrender.com/generateQRCode', requestData, {
+        const qrCodeServiceResponse = await axios.post('https://qrcode-services.onrender.com/generateQRCode', requestData, {
             headers: {
                 Authorization: token
             }
