@@ -8,7 +8,7 @@ const cors = require('cors');
 dotenv.config({path:'./config.env'})
 require("./src/models/connection/conn")
 const corsOptions = {
-    origin: 'http://localhost:3000', // Allow requests from this origin
+    origin: 'https://attendxpert.onrender.com',// Allow requests from this origin
     methods: ['GET', 'POST','DELETE','PUT'], // Allow only GET and POST requests
     allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
   };
